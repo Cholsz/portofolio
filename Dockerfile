@@ -14,6 +14,8 @@ WORKDIR /app
 
 COPY . .
 
+RUN rm -f bootstrap/cache/*.php
+
 RUN composer install --no-dev --optimize-autoloader
 
 RUN php artisan wayfinder:generate --with-form
