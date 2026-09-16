@@ -14,6 +14,10 @@ use App\Models\Project;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+Route::get('/test-vercel', function () {
+    return 'Laravel Vercel OK';
+});
+
 Route::get('/', function () {
     $supabaseUrl =
         'https://untydpqfqpyvheljrcym.storage.supabase.co/storage/v1/object/public/portofolio';
