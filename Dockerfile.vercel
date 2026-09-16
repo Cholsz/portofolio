@@ -16,6 +16,12 @@ COPY . .
 
 RUN composer install --no-dev --optimize-autoloader
 
+RUN php artisan wayfinder:generate --with-form
+
+RUN npm install
+
+RUN npm run build
+
 RUN php artisan optimize
 
 CMD ["sh", "-c", "php artisan octane:frankenphp --host=0.0.0.0 --port=${PORT:-80}"]
