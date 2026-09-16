@@ -14,7 +14,9 @@ WORKDIR /app
 
 COPY . .
 
-RUN rm -f bootstrap/cache/*.php
+RUN touch storage/logs/laravel.log
+
+RUN chmod -R 777 storage bootstrap/cache
 
 RUN composer install --no-dev --optimize-autoloader
 
