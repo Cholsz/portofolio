@@ -1,5 +1,6 @@
 FROM dunglas/frankenphp:php8.4
 
+# PHP extensions
 RUN install-php-extensions \
     pdo_pgsql \
     pgsql \
@@ -12,19 +13,23 @@ RUN install-php-extensions \
 
 WORKDIR /app
 
+# Copy project
 COPY . .
 
-RUN touch storage/logs/laravel.log
+# Hapus cache Laravel lama
+RUN rm -f bootstrap/cache/*.php
 
-RUN chmod -R 777 storage bootstrap/cache
-
+# Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
 
+# Generate Wayfinder
 RUN php artisan wayfinder:generate --with-form
 
+# Install frontend dependencies
 RUN npm install
 
+# Build frontend
 RUN npm run build
 
-
-CMD ["sh", "-c", "php artisan octane:frankenphp --host=0.0.0.0 --port=${PORT:-80}"]
+# Start Laravel dengan FrankenPHP
+CMD ["sh", "-c", "php artisan octane:frankenphp --server=frankenphp --host=0.0.0.0 --port=${PORT:-80} --workers=1 --max-requests=1"]
