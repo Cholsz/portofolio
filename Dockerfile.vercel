@@ -1,0 +1,21 @@
+FROM dunglas/frankenphp
+
+RUN install-php-extensions \
+    pdo_pgsql \
+    pgsql \
+    mbstring \
+    bcmath \
+    exif \
+    pcntl \
+    intl \
+    zip
+
+WORKDIR /app
+
+COPY . .
+
+RUN composer install --no-dev --optimize-autoloader
+
+RUN php artisan optimize
+
+CMD ["php", "artisan", "octane:frankenphp", "--host=0.0.0.0", "--port=80"]
