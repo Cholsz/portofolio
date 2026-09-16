@@ -15,7 +15,11 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/test-vercel', function () {
-    return 'Laravel Vercel OK';
+    return response()->json([
+        'app_env' => config('app.env'),
+        'db_driver' => config('database.default'),
+        'octane' => config('octane.server'),
+    ]);
 });
 
 Route::get('/', function () {
