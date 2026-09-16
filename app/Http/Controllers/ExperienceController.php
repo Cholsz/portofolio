@@ -10,30 +10,30 @@ use Inertia\Inertia;
 class ExperienceController extends Controller
 {
     public function index(Request $request)
-{
-    $query = Experience::query();
+    {
+        $query = Experience::query();
 
-    if ($request->filled('type') && $request->type !== 'semua') {
-        $query->where('type', $request->type);
-    }
+        if ($request->filled('type') && $request->type !== 'semua') {
+            $query->where('type', $request->type);
+        }
 
-    $experiences = $query
-        ->orderBy('urutan')
-        ->orderByDesc('tanggal_mulai')
-        ->get()
-        ->map(function ($experience) {
-            $experience->gambar_url = $experience->gambar
-                ? asset('storage/' . $experience->gambar)
+        $experiences = $query
+            ->orderBy('urutan')
+            ->orderByDesc('tanggal_mulai')
+            ->get()
+            ->map(function ($experience) {
+                $experience->gambar_url = $experience->gambar
+                ? 'https://untydpqfqpyvheljrcym.storage.supabase.co/storage/v1/object/public/portofolio/' . $experience->gambar
                 : null;
 
             return $experience;
         });
 
-    return Inertia::render('admin/experiences/index', [
-        'experiences' => $experiences,
-        'filter' => $request->type ?? 'semua',
-    ]);
-}
+        return Inertia::render('admin/experiences/index', [
+            'experiences' => $experiences,
+            'filter' => $request->type ?? 'semua',
+        ]);
+    }
 
     public function create()
     {
@@ -67,8 +67,16 @@ class ExperienceController extends Controller
         ]);
 
         if ($request->hasFile('gambar')) {
-            $validated['gambar'] = $request->file('gambar')
-                ->store('experiences', 'public');
+            $file = $request->file('gambar');
+            $path = 'experiences/' . $file->hashName();
+
+            $stream = fopen($file->getRealPath(), 'r');
+
+            Storage::disk('supabase')->writeStream($path, $stream);
+
+            fclose($stream);
+
+            $validated['gambar'] = $path;
         }
 
         $validated['status'] = $request->boolean('status', true);
@@ -116,11 +124,19 @@ class ExperienceController extends Controller
 
         if ($request->hasFile('gambar')) {
             if ($experience->gambar) {
-                Storage::disk('public')->delete($experience->gambar);
+                Storage::disk('supabase')->delete($experience->gambar);
             }
 
-            $validated['gambar'] = $request->file('gambar')
-                ->store('experiences', 'public');
+            $file = $request->file('gambar');
+            $path = 'experiences/' . $file->hashName();
+
+            $stream = fopen($file->getRealPath(), 'r');
+
+            Storage::disk('supabase')->writeStream($path, $stream);
+
+            fclose($stream);
+
+            $validated['gambar'] = $path;
         }
 
         $validated['status'] = $request->boolean('status', false);
@@ -136,7 +152,7 @@ class ExperienceController extends Controller
     public function destroy(Experience $experience)
     {
         if ($experience->gambar) {
-            Storage::disk('public')->delete($experience->gambar);
+            Storage::disk('supabase')->delete($experience->gambar);
         }
 
         $experience->delete();

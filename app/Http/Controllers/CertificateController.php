@@ -13,7 +13,14 @@ class CertificateController extends Controller
     {
         $certificates = Certificate::orderBy('urutan')
             ->orderByDesc('created_at')
-            ->get();
+            ->get()
+            ->map(function ($certificate) {
+                $certificate->gambar_url = $certificate->gambar
+                    ? 'https://untydpqfqpyvheljrcym.storage.supabase.co/storage/v1/object/public/portofolio/' . $certificate->gambar
+                    : null;
+
+                return $certificate;
+            });
 
         return Inertia::render('admin/certificates/index', [
             'certificates' => $certificates,
@@ -32,16 +39,32 @@ class CertificateController extends Controller
             'institusi' => ['nullable', 'string', 'max:255'],
             'tahun' => ['nullable', 'string', 'max:20'],
             'deskripsi' => ['nullable', 'string'],
-            'gambar' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:10000'],
+            'gambar' => [
+                'nullable',
+                'file',
+                'mimes:jpg,jpeg,png,webp,pdf',
+                'max:10000',
+            ],
             'link' => ['nullable', 'url', 'max:255'],
             'urutan' => ['nullable', 'integer', 'min:0'],
             'status' => ['nullable', 'boolean'],
         ]);
 
         if ($request->hasFile('gambar')) {
-            $validated['gambar'] = $request->file('gambar')
-                ->store('certificates', 'public');
+            $file = $request->file('gambar');
+            $path = 'certificates/' . $file->hashName();
+
+            $stream = fopen($file->getRealPath(), 'r');
+
+            Storage::disk('supabase')->writeStream($path, $stream);
+
+            fclose($stream);
+
+            $validated['gambar'] = $path;
         }
+
+        $validated['urutan'] = $validated['urutan'] ?? 0;
+        $validated['status'] = $request->boolean('status', true);
 
         Certificate::create($validated);
 
@@ -64,7 +87,12 @@ class CertificateController extends Controller
             'institusi' => ['nullable', 'string', 'max:255'],
             'tahun' => ['nullable', 'string', 'max:20'],
             'deskripsi' => ['nullable', 'string'],
-            'gambar' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:10000'],
+            'gambar' => [
+                'nullable',
+                'file',
+                'mimes:jpg,jpeg,png,webp,pdf',
+                'max:10000',
+            ],
             'link' => ['nullable', 'url', 'max:255'],
             'urutan' => ['nullable', 'integer', 'min:0'],
             'status' => ['nullable', 'boolean'],
@@ -72,12 +100,23 @@ class CertificateController extends Controller
 
         if ($request->hasFile('gambar')) {
             if ($certificate->gambar) {
-                Storage::disk('public')->delete($certificate->gambar);
+                Storage::disk('supabase')->delete($certificate->gambar);
             }
 
-            $validated['gambar'] = $request->file('gambar')
-                ->store('certificates', 'public');
+            $file = $request->file('gambar');
+            $path = 'certificates/' . $file->hashName();
+
+            $stream = fopen($file->getRealPath(), 'r');
+
+            Storage::disk('supabase')->writeStream($path, $stream);
+
+            fclose($stream);
+
+            $validated['gambar'] = $path;
         }
+
+        $validated['urutan'] = $validated['urutan'] ?? 0;
+        $validated['status'] = $request->boolean('status', false);
 
         $certificate->update($validated);
 
@@ -89,7 +128,7 @@ class CertificateController extends Controller
     public function destroy(Certificate $certificate)
     {
         if ($certificate->gambar) {
-            Storage::disk('public')->delete($certificate->gambar);
+            Storage::disk('supabase')->delete($certificate->gambar);
         }
 
         $certificate->delete();

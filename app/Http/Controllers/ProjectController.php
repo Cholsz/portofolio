@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -15,7 +16,14 @@ class ProjectController extends Controller
         $projects = Project::with('category')
             ->orderBy('urutan')
             ->orderByDesc('created_at')
-            ->get();
+            ->get()
+            ->map(function ($project) {
+                $project->gambar_url = $project->gambar
+                    ? 'https://untydpqfqpyvheljrcym.storage.supabase.co/storage/v1/object/public/portofolio/' . $project->gambar
+                    : null;
+
+                return $project;
+            });
 
         return Inertia::render('admin/projects/index', [
             'projects' => $projects,
@@ -24,7 +32,7 @@ class ProjectController extends Controller
 
     public function create()
     {
-        $categories = \App\Models\Category::where('status', true)
+        $categories = Category::where('status', true)
             ->orderBy('nama')
             ->get();
 
@@ -34,24 +42,32 @@ class ProjectController extends Controller
     }
 
     public function store(Request $request)
-        {
-            $validated = $request->validate([
-        'judul' => ['required', 'string', 'max:255'],
-        'category_id' => ['required', 'exists:categories,id'],
-        'deskripsi' => ['nullable', 'string'],
-        'gambar' => ['nullable', 'image', 'max:2048'],
-        'teknologi' => ['nullable', 'string'],
-        'github_url' => ['nullable', 'url', 'max:255'],
-        'demo_url' => ['nullable', 'url', 'max:255'],
-        'urutan' => ['nullable', 'integer', 'min:0'],
-        'status' => ['nullable', 'boolean'],
-    ]);
+    {
+        $validated = $request->validate([
+            'judul' => ['required', 'string', 'max:255'],
+            'category_id' => ['required', 'exists:categories,id'],
+            'deskripsi' => ['nullable', 'string'],
+            'gambar' => ['nullable', 'image', 'max:2048'],
+            'teknologi' => ['nullable', 'string'],
+            'github_url' => ['nullable', 'url', 'max:255'],
+            'demo_url' => ['nullable', 'url', 'max:255'],
+            'urutan' => ['nullable', 'integer', 'min:0'],
+            'status' => ['nullable', 'boolean'],
+        ]);
 
         $validated['slug'] = Str::slug($validated['judul']);
 
         if ($request->hasFile('gambar')) {
-            $validated['gambar'] = $request->file('gambar')
-                ->store('projects', 'public');
+            $file = $request->file('gambar');
+            $path = 'projects/' . $file->hashName();
+
+            $stream = fopen($file->getRealPath(), 'r');
+
+            Storage::disk('supabase')->writeStream($path, $stream);
+
+            fclose($stream);
+
+            $validated['gambar'] = $path;
         }
 
         $validated['status'] = $request->boolean('status', true);
@@ -66,7 +82,7 @@ class ProjectController extends Controller
 
     public function edit(Project $project)
     {
-        $categories = \App\Models\Category::where('status', true)
+        $categories = Category::where('status', true)
             ->orderBy('nama')
             ->get();
 
@@ -94,11 +110,19 @@ class ProjectController extends Controller
 
         if ($request->hasFile('gambar')) {
             if ($project->gambar) {
-                Storage::disk('public')->delete($project->gambar);
+                Storage::disk('supabase')->delete($project->gambar);
             }
 
-            $validated['gambar'] = $request->file('gambar')
-                ->store('projects', 'public');
+            $file = $request->file('gambar');
+            $path = 'projects/' . $file->hashName();
+
+            $stream = fopen($file->getRealPath(), 'r');
+
+            Storage::disk('supabase')->writeStream($path, $stream);
+
+            fclose($stream);
+
+            $validated['gambar'] = $path;
         }
 
         $validated['status'] = $request->boolean('status', false);
@@ -114,7 +138,7 @@ class ProjectController extends Controller
     public function destroy(Project $project)
     {
         if ($project->gambar) {
-            Storage::disk('public')->delete($project->gambar);
+            Storage::disk('supabase')->delete($project->gambar);
         }
 
         $project->delete();

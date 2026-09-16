@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Award, ExternalLink, X } from 'lucide-react';
 
@@ -8,6 +9,7 @@ type Certificate = {
     tahun: string | null;
     deskripsi: string | null;
     gambar: string | null;
+    gambar_url: string | null;
     link: string | null;
 };
 
@@ -18,6 +20,22 @@ type Props = {
 export default function Certificates({ certificates }: Props) {
     const [selectedCertificate, setSelectedCertificate] =
         useState<Certificate | null>(null);
+
+    const getFileUrl = (certificate: Certificate) => {
+        if (certificate.gambar_url) {
+            return certificate.gambar_url;
+        }
+
+        if (!certificate.gambar) {
+            return null;
+        }
+
+        if (certificate.gambar.startsWith('http')) {
+            return certificate.gambar;
+        }
+
+        return `https://untydpqfqpyvheljrcym.storage.supabase.co/storage/v1/object/public/portofolio/${certificate.gambar}`;
+    };
 
     return (
         <>
@@ -163,13 +181,13 @@ export default function Certificates({ certificates }: Props) {
                                 .toLowerCase()
                                 .endsWith('.pdf') ? (
                                 <iframe
-                                    src={`/storage/${selectedCertificate.gambar}`}
+                                    src={getFileUrl(selectedCertificate) ?? ''}
+                                    className="h-[600px] w-full"
                                     title={selectedCertificate.judul}
-                                    className="h-[75vh] w-full rounded-xl border border-white/10"
                                 />
                             ) : (
                                 <img
-                                    src={`/storage/${selectedCertificate.gambar}`}
+                                    src={getFileUrl(selectedCertificate) ?? ''}
                                     alt={selectedCertificate.judul}
                                     className="mx-auto max-h-[75vh] w-auto rounded-xl object-contain"
                                 />
@@ -181,3 +199,4 @@ export default function Certificates({ certificates }: Props) {
         </>
     );
 }
+

@@ -18,8 +18,8 @@ return new class extends Migration
         // Salin YYYY-MM dari data tanggal lama
         DB::statement("
             UPDATE experiences
-            SET tanggal_mulai_temp = LEFT(tanggal_mulai, 7),
-                tanggal_selesai_temp = LEFT(tanggal_selesai, 7)
+            SET tanggal_mulai_temp = TO_CHAR(tanggal_mulai, 'YYYY-MM'),
+                tanggal_selesai_temp = TO_CHAR(tanggal_selesai, 'YYYY-MM')
         ");
 
         // Hapus kolom tanggal lama

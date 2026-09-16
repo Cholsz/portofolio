@@ -36,22 +36,48 @@ class ProfileController extends Controller
             'award_count' => ['nullable', 'integer', 'min:0'],
         ]);
 
+        /*
+        |--------------------------------------------------------------------------
+        | Foto Profile
+        |--------------------------------------------------------------------------
+        */
         if ($request->hasFile('foto')) {
             if ($profile?->foto) {
-                Storage::disk('public')->delete($profile->foto);
+                Storage::disk('supabase')->delete($profile->foto);
             }
 
-            $validated['foto'] = $request->file('foto')
-                ->store('profile', 'public');
+            $file = $request->file('foto');
+            $path = 'profile/' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+            $stream = fopen($file->getRealPath(), 'r');
+
+            Storage::disk('supabase')->writeStream($path, $stream);
+
+            fclose($stream);
+
+            $validated['foto'] = $path;
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Foto About
+        |--------------------------------------------------------------------------
+        */
         if ($request->hasFile('foto_about')) {
             if ($profile?->foto_about) {
-                Storage::disk('public')->delete($profile->foto_about);
+                Storage::disk('supabase')->delete($profile->foto_about);
             }
 
-            $validated['foto_about'] = $request->file('foto_about')
-                ->store('profile/about', 'public');
+            $file = $request->file('foto_about');
+            $path = 'profile/about/' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+            $stream = fopen($file->getRealPath(), 'r');
+
+            Storage::disk('supabase')->writeStream($path, $stream);
+
+            fclose($stream);
+
+            $validated['foto_about'] = $path;
         }
 
         if ($profile) {

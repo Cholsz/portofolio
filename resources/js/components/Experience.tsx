@@ -17,6 +17,7 @@ type ExperienceItem = {
     tanggal_mulai: string | null;
     tanggal_selesai: string | null;
     gambar: string | null;
+    gambar_url: string | null;
 };
 
 type Props = {
@@ -36,6 +37,9 @@ const typeLabels = {
 };
 
 type FilterType = 'semua' | 'organisasi' | 'pelatihan' | 'pencapaian';
+
+const SUPABASE_STORAGE_URL =
+    'https://untydpqfqpyvheljrcym.storage.supabase.co/storage/v1/object/public/portofolio';
 
 export default function Experience({ experiences }: Props) {
     const [visible, setVisible] = useState(false);
@@ -68,12 +72,20 @@ export default function Experience({ experiences }: Props) {
                       experience.type === activeFilter,
               );
 
-    const getFileUrl = (gambar: string) => {
-        if (gambar.startsWith('http')) {
-            return gambar;
+    const getFileUrl = (experience: ExperienceItem) => {
+        if (experience.gambar_url) {
+            return experience.gambar_url;
         }
 
-        return `/storage/${gambar}`;
+        if (!experience.gambar) {
+            return null;
+        }
+
+        if (experience.gambar.startsWith('http')) {
+            return experience.gambar;
+        }
+
+        return `${SUPABASE_STORAGE_URL}/${experience.gambar}`;
     };
 
     const isPdf = (gambar: string) => {
@@ -97,7 +109,6 @@ export default function Experience({ experiences }: Props) {
                 className="relative px-6 py-28"
             >
                 <div className="mx-auto max-w-6xl">
-
                     {/* Heading */}
                     <div
                         className={`transition-all duration-700 ease-out ${
@@ -138,9 +149,7 @@ export default function Experience({ experiences }: Props) {
                                     key={filter.value}
                                     type="button"
                                     onClick={() =>
-                                        setActiveFilter(
-                                            filter.value,
-                                        )
+                                        setActiveFilter(filter.value)
                                     }
                                     className={`rounded-full border px-5 py-2 text-sm font-medium transition-all duration-300 ${
                                         isActive
@@ -161,14 +170,10 @@ export default function Experience({ experiences }: Props) {
                                 {filteredExperiences.map(
                                     (experience, index) => {
                                         const Icon =
-                                            typeIcons[
-                                                experience.type
-                                            ];
+                                            typeIcons[experience.type];
 
                                         const typeLabel =
-                                            typeLabels[
-                                                experience.type
-                                            ];
+                                            typeLabels[experience.type];
 
                                         const year =
                                             experience.tanggal_mulai
@@ -187,17 +192,14 @@ export default function Experience({ experiences }: Props) {
                                                 }`}
                                                 style={{
                                                     transitionDelay: `${
-                                                        450 +
-                                                        index * 100
+                                                        450 + index * 100
                                                     }ms`,
                                                 }}
                                             >
                                                 {/* Header */}
                                                 <div className="flex items-start justify-between gap-4">
                                                     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-400">
-                                                        <Icon
-                                                            size={19}
-                                                        />
+                                                        <Icon size={19} />
                                                     </div>
 
                                                     <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-400">
@@ -217,14 +219,12 @@ export default function Experience({ experiences }: Props) {
 
                                                 {/* Institution */}
                                                 <p className="mt-2 text-sm font-medium text-slate-300">
-                                                    {experience.institusi ||
-                                                        '-'}
+                                                    {experience.institusi || '-'}
                                                 </p>
 
                                                 {/* Description */}
                                                 <p className="mt-4 line-clamp-3 text-sm leading-7 text-slate-400">
-                                                    {experience.deskripsi ||
-                                                        '-'}
+                                                    {experience.deskripsi || '-'}
                                                 </p>
 
                                                 {/* Detail Button */}
@@ -238,9 +238,7 @@ export default function Experience({ experiences }: Props) {
                                                     className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-blue-400 transition hover:text-blue-300"
                                                 >
                                                     Lihat Detail
-                                                    <ExternalLink
-                                                        size={15}
-                                                    />
+                                                    <ExternalLink size={15} />
                                                 </button>
 
                                                 {/* Bottom Line */}
@@ -261,26 +259,20 @@ export default function Experience({ experiences }: Props) {
                 </div>
             </section>
 
-            {/* ================= MODAL ================= */}
+            {/* Modal */}
             {selectedExperience && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
-                    onClick={() =>
-                        setSelectedExperience(null)
-                    }
+                    onClick={() => setSelectedExperience(null)}
                 >
                     <div
                         className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-white/10 bg-slate-950 p-6 shadow-2xl sm:p-8"
-                        onClick={(event) =>
-                            event.stopPropagation()
-                        }
+                        onClick={(event) => event.stopPropagation()}
                     >
                         {/* Close */}
                         <button
                             type="button"
-                            onClick={() =>
-                                setSelectedExperience(null)
-                            }
+                            onClick={() => setSelectedExperience(null)}
                             className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-400 transition hover:bg-white/10 hover:text-white"
                         >
                             <X size={18} />
@@ -288,11 +280,7 @@ export default function Experience({ experiences }: Props) {
 
                         {/* Type */}
                         <p className="text-xs font-medium uppercase tracking-[0.2em] text-blue-400">
-                            {
-                                typeLabels[
-                                    selectedExperience.type
-                                ]
-                            }
+                            {typeLabels[selectedExperience.type]}
                         </p>
 
                         {/* Title */}
@@ -318,16 +306,13 @@ export default function Experience({ experiences }: Props) {
                         </p>
 
                         {/* Certificate / Image */}
-                        {selectedExperience.gambar && (
+                        {getFileUrl(selectedExperience) && (
                             <div className="mt-7 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
-                                {isPdf(
-                                    selectedExperience.gambar,
-                                ) ? (
+                                {selectedExperience.gambar &&
+                                isPdf(selectedExperience.gambar) ? (
                                     <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
                                         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-400">
-                                            <BookOpen
-                                                size={28}
-                                            />
+                                            <BookOpen size={28} />
                                         </div>
 
                                         <h4 className="mt-4 font-semibold text-white">
@@ -335,32 +320,28 @@ export default function Experience({ experiences }: Props) {
                                         </h4>
 
                                         <p className="mt-2 text-sm text-slate-400">
-                                            File sertifikat tersedia
-                                            dalam format PDF.
+                                            File sertifikat tersedia dalam
+                                            format PDF.
                                         </p>
 
                                         <a
                                             href={getFileUrl(
-                                                selectedExperience.gambar,
-                                            )}
+                                                selectedExperience,
+                                            )!}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="mt-5 inline-flex items-center gap-2 rounded-full bg-blue-500 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-400"
                                         >
                                             Buka Sertifikat
-                                            <ExternalLink
-                                                size={15}
-                                            />
+                                            <ExternalLink size={15} />
                                         </a>
                                     </div>
                                 ) : (
                                     <img
                                         src={getFileUrl(
-                                            selectedExperience.gambar,
-                                        )}
-                                        alt={
-                                            selectedExperience.judul
-                                        }
+                                            selectedExperience,
+                                        )!}
+                                        alt={selectedExperience.judul}
                                         className="max-h-[500px] w-full object-contain"
                                     />
                                 )}
@@ -374,8 +355,7 @@ export default function Experience({ experiences }: Props) {
                             </h4>
 
                             <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-400">
-                                {selectedExperience.deskripsi ||
-                                    '-'}
+                                {selectedExperience.deskripsi || '-'}
                             </p>
                         </div>
                     </div>
@@ -384,4 +364,3 @@ export default function Experience({ experiences }: Props) {
         </>
     );
 }
-

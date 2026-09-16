@@ -115,7 +115,11 @@ export default function About({
                             <div className="relative h-72 w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-2 shadow-2xl shadow-blue-500/10 sm:h-80">
                                 {profile?.foto_about ? (
                                     <img
-                                        src={`/storage/${profile.foto_about}`}
+                                        src={
+                                            profile.foto_about
+                                                ? `https://untydpqfqpyvheljrcym.storage.supabase.co/storage/v1/object/public/portofolio/${profile.foto_about}`
+                                                : undefined
+                                        }
                                         alt={`Foto ${profile.nama}`}
                                         className="h-full w-full rounded-xl object-cover transition duration-500 hover:scale-105"
                                     />

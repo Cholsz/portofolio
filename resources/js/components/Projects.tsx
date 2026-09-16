@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { ArrowUpRight, Github, X } from 'lucide-react';
 
@@ -6,6 +7,7 @@ type ProjectItem = {
     judul: string;
     deskripsi: string | null;
     gambar: string | null;
+    gambar_url: string | null;
     teknologi: string | null;
     github_url: string | null;
     demo_url: string | null;
@@ -14,6 +16,9 @@ type ProjectItem = {
 type Props = {
     projects: ProjectItem[];
 };
+
+const SUPABASE_STORAGE_URL =
+    'https://untydpqfqpyvheljrcym.storage.supabase.co/storage/v1/object/public/portofolio';
 
 export default function Projects({ projects }: Props) {
     const [visible, setVisible] = useState(false);
@@ -28,10 +33,20 @@ export default function Projects({ projects }: Props) {
         return () => clearTimeout(timer);
     }, []);
 
-    const getImageUrl = (gambar: string) => {
-        return gambar.startsWith('http')
-            ? gambar
-            : `/storage/${gambar}`;
+    const getImageUrl = (project: ProjectItem) => {
+        if (project.gambar_url) {
+            return project.gambar_url;
+        }
+
+        if (!project.gambar) {
+            return null;
+        }
+
+        if (project.gambar.startsWith('http')) {
+            return project.gambar;
+        }
+
+        return `${SUPABASE_STORAGE_URL}/${project.gambar}`;
     };
 
     return (
@@ -41,7 +56,6 @@ export default function Projects({ projects }: Props) {
                 className="relative scroll-mt-24 px-4 py-28 sm:px-6"
             >
                 <div className="mx-auto max-w-6xl">
-
                     {/* Header */}
                     <div
                         className={`transition-all duration-700 ${
@@ -75,6 +89,8 @@ export default function Projects({ projects }: Props) {
                                       .filter(Boolean)
                                 : [];
 
+                            const imageUrl = getImageUrl(project);
+
                             return (
                                 <article
                                     key={project.id}
@@ -89,11 +105,9 @@ export default function Projects({ projects }: Props) {
                                 >
                                     {/* Image */}
                                     <div className="relative aspect-video overflow-hidden bg-slate-900">
-                                        {project.gambar ? (
+                                        {imageUrl ? (
                                             <img
-                                                src={getImageUrl(
-                                                    project.gambar,
-                                                )}
+                                                src={imageUrl}
                                                 alt={project.judul}
                                                 className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
                                             />
@@ -105,7 +119,6 @@ export default function Projects({ projects }: Props) {
 
                                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
 
-                                        {/* Number */}
                                         <span className="absolute left-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-slate-950/70 text-xs font-semibold text-white backdrop-blur-md">
                                             {String(index + 1).padStart(2, '0')}
                                         </span>
@@ -157,7 +170,6 @@ export default function Projects({ projects }: Props) {
                                         </button>
                                     </div>
 
-                                    {/* Bottom Glow */}
                                     <div className="h-px w-0 bg-blue-500 transition-all duration-500 group-hover:w-full" />
                                 </article>
                             );
@@ -195,14 +207,12 @@ export default function Projects({ projects }: Props) {
                             <X size={20} />
                         </button>
 
-                        {/* Scrollable Content */}
                         <div className="overflow-y-auto">
-
                             {/* Image */}
-                            {selectedProject.gambar && (
+                            {getImageUrl(selectedProject) && (
                                 <div className="relative overflow-hidden bg-slate-900">
                                     <img
-                                        src={getImageUrl(selectedProject.gambar)}
+                                        src={getImageUrl(selectedProject)!}
                                         alt={selectedProject.judul}
                                         className="max-h-[50vh] w-full object-cover"
                                     />
@@ -213,7 +223,6 @@ export default function Projects({ projects }: Props) {
 
                             {/* Detail */}
                             <div className="p-6 sm:p-8">
-
                                 <p className="text-xs font-medium uppercase tracking-[0.2em] text-blue-400">
                                     Project Details
                                 </p>
@@ -291,3 +300,4 @@ export default function Projects({ projects }: Props) {
         </>
     );
 }
+

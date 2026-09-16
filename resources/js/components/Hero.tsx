@@ -141,7 +141,11 @@ export default function Hero({ profile }: Props) {
                             <div className="flex h-60 w-60 items-center justify-center overflow-hidden rounded-full border border-blue-500/20 bg-slate-900 shadow-inner shadow-blue-500/10">
                                 {profile?.foto ? (
                                     <img
-                                        src={`/storage/${profile.foto}`}
+                                        src={
+                                            profile.foto
+                                                ? `https://untydpqfqpyvheljrcym.storage.supabase.co/storage/v1/object/public/portofolio/${profile.foto}`
+                                                : undefined
+                                        }
                                         alt={profile.nama}
                                         className="h-full w-full object-cover"
                                     />

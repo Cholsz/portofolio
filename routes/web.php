@@ -15,22 +15,49 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
+    $supabaseUrl =
+        'https://untydpqfqpyvheljrcym.storage.supabase.co/storage/v1/object/public/portofolio';
+
     $profile = Profile::first();
+
+    $supabaseUrl =
+    'https://untydpqfqpyvheljrcym.storage.supabase.co/storage/v1/object/public/portofolio';
 
     $projects = Project::where('status', true)
         ->orderBy('urutan')
         ->orderByDesc('created_at')
-        ->get();
+        ->get()
+        ->map(function ($project) use ($supabaseUrl) {
+            $project->gambar_url = $project->gambar
+                ? $supabaseUrl . '/' . $project->gambar
+                : null;
+
+            return $project;
+        });
 
     $experiences = Experience::where('status', true)
         ->orderBy('urutan')
         ->orderByDesc('tanggal_mulai')
-        ->get();
+        ->get()
+        ->map(function ($experience) use ($supabaseUrl) {
+            $experience->gambar_url = $experience->gambar
+                ? $supabaseUrl . '/' . $experience->gambar
+                : null;
+
+            return $experience;
+        });
 
     $certificates = Certificate::where('status', true)
         ->orderBy('urutan')
         ->orderByDesc('created_at')
-        ->get();
+        ->get()
+        ->map(function ($certificate) use ($supabaseUrl) {
+            $certificate->gambar_url = $certificate->gambar
+                ? $supabaseUrl . '/' . $certificate->gambar
+                : null;
+
+            return $certificate;
+        });
 
     $projectCount = Project::where('status', true)->count();
 
