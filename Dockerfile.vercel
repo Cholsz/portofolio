@@ -1,6 +1,6 @@
 FROM dunglas/frankenphp:php8.4
 
-# PHP extensions
+# Install PHP extensions
 RUN install-php-extensions \
     pdo_pgsql \
     pgsql \
@@ -12,6 +12,9 @@ RUN install-php-extensions \
     zip
 
 WORKDIR /app
+
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Copy project
 COPY . .
@@ -25,11 +28,15 @@ RUN composer install --no-dev --optimize-autoloader
 # Generate Wayfinder
 RUN php artisan wayfinder:generate --with-form
 
+# Install Node.js dan npm
+RUN apt-get update && apt-get install -y nodejs npm \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install frontend dependencies
 RUN npm install
 
 # Build frontend
 RUN npm run build
 
-# Start Laravel dengan FrankenPHP
+# Jalankan Laravel dengan FrankenPHP
 CMD ["sh", "-c", "php artisan octane:frankenphp --server=frankenphp --host=0.0.0.0 --port=${PORT:-80} --workers=1 --max-requests=1"]
